@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: #202c28; background: #f5f6f2; font-synthesis: none; text-rendering: optimizeLegibility;
+  --ink: #202c28; --muted: #62706a; --primary: #17604d; --primary-hover: #104b3c;
+  --sidebar: #123d35; --accent: #d6f292; --surface: #fff; --background: #f5f6f2;
+  --border: #dce2da; --danger: #a32929; --radius: 14px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; font-size: 15px; line-height: 1.55; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button, select, input[type="checkbox"] { cursor: pointer; }
+button { border: 0; }
+button:disabled { cursor: wait; opacity: .55; }
+button, a { transition: background-color .16s ease, color .16s ease; }
+:focus-visible { outline: 3px solid #619331; outline-offset: 4px; }
+main:focus, [tabindex="-1"]:focus { outline: none; }
+h1, h2, h3, .brand { font-family: Manrope, system-ui, sans-serif; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { font-size: clamp(27px, 3vw, 36px); font-weight: 800; line-height: 1.22; letter-spacing: -1.2px; margin-bottom: 12px; }
+h2 { font-size: 21px; font-weight: 750; line-height: 1.35; letter-spacing: -.5px; margin-bottom: 12px; }
+h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+small { font-size: 12px; }
+::selection { background: #d6f292; color: #123d35; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+input, select, textarea { width: 100%; border: 1px solid #b9c5bb; border-radius: 8px; background: var(--surface); color: var(--ink); padding: 11px 12px; min-height: 46px; }
+input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+textarea { resize: vertical; }
+input[type="checkbox"] { width: 19px; height: 19px; min-height: 0; accent-color: var(--primary); }
+button, a { touch-action: manipulation; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
