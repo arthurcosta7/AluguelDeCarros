@@ -124,7 +124,7 @@ export function BookingDetail({ user, id, revision, onSaved }) {
   return <Resource resource={resource}>{detail => <DetailContent key={`${id}-${detail.rental.version}`} user={user} detail={detail} onSaved={onSaved} />}</Resource>
 }
 function DetailContent({ user, detail, onSaved }) {
-  const { rental: r, events, contract } = detail
+  const { rental: r, events, contract, creditContract } = detail
   const [confirm, setConfirm] = useState('')
   const editable = !['CANCELADO', 'CONTRATADO'].includes(r.status)
   const canEvaluate = user.role === 'EMPRESA' && r.status === 'EM_ANALISE' || user.role === 'BANCO' && r.status === 'AGUARDANDO_BANCO'
@@ -153,13 +153,36 @@ function DetailContent({ user, detail, onSaved }) {
         </Form></div>}
     </section><aside className="panel history"><h2>Histórico do pedido</h2><ol>{events.map(e => <li key={e.id}><span className="timeline-dot" aria-hidden="true" /><strong>{e.action.replaceAll('_', ' ').toLowerCase()}</strong><small>{e.actorName} · {timestamp(e.createdAt)}</small><p>{e.note}</p></li>)}</ol></aside></div>
     {contract && <section className="panel contract"><div className="section-heading"><div><p className="eyebrow">CONTRATO #{contract.id}</p><h2>Condições confirmadas</h2></div><button className="button secondary" onClick={() => window.print()}>Imprimir contrato</button></div><p className="muted">Formalizado em {timestamp(contract.acceptedAt)}</p><pre>{contract.terms}</pre></section>}
+    {creditContract && <section className="panel contract"><div className="section-heading"><div><p className="eyebrow">CRÉDITO #{creditContract.id}</p><h2>Contrato de crédito</h2></div><button className="button secondary" onClick={() => window.print()}>Imprimir contratos</button></div><p className="muted">Vinculado ao contrato de aluguel #{creditContract.contractId} · {creditContract.bank.name}</p><pre>{creditContract.terms}</pre></section>}
     <a className="text-button back-link" href="#/pedidos">← Voltar aos pedidos</a>
   </>
 }
 
-export function Profile({ user }) {
-  return <><Heading eyebrow="MINHA CONTA" title="Seus dados">Informações do cadastro e perfil de acesso.</Heading><section className="panel form-panel"><dl className="detail-grid">
+export function Profile({ user, onUpdated, onDeleted }) {
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [count, setCount] = useState(user.employers?.length || 0)
+  const [notice, setNotice] = useState('')
+  if (editing) return <><Heading eyebrow="MINHA CONTA" title="Editar cadastro">Atualize seus dados pessoais. Seu usuário e sua senha permanecem os mesmos.</Heading>
+    <section className="panel form-panel"><Form submit="Salvar cadastro" secondary={<button type="button" className="button secondary" onClick={() => setEditing(false)}>Voltar</button>} onSubmit={async data => {
+      const body = Object.fromEntries(['name', 'rg', 'cpf', 'address', 'profession'].map(key => [key, data.get(key)]))
+      body.employers = Array.from({ length: count }, (_, i) => ({ name: data.get(`employer-${i}`), income: Number(data.get(`income-${i}`)) }))
+      onUpdated(await api('/clients/me', { method: 'PUT', body })); setEditing(false); setNotice('Cadastro atualizado.')
+    }}>
+      <Field label="Nome completo" name="name" defaultValue={user.name} autoComplete="name" required maxLength={120} />
+      <div className="form-grid"><Field label="RG" name="rg" defaultValue={user.rg} required maxLength={20} /><Field label="CPF" name="cpf" defaultValue={user.cpf} inputMode="numeric" pattern="[0-9]{11}" title="Informe 11 dígitos sem pontuação." required maxLength={11} /></div>
+      <Field label="Endereço" name="address" defaultValue={user.address} autoComplete="street-address" required maxLength={250} />
+      <Field label="Profissão" name="profession" defaultValue={user.profession} required maxLength={100} />
+      <h3>Empregadores e rendimentos</h3>
+      {Array.from({ length: count }, (_, i) => <div className="form-grid" key={i}><Field label={`Empregador ${i + 1}`} name={`employer-${i}`} defaultValue={user.employers[i]?.name} required maxLength={120} /><Field label="Renda mensal (R$)" name={`income-${i}`} defaultValue={user.employers[i]?.income} type="number" min="0" max="9999999999.99" step="0.01" required /></div>)}
+      <div className="inline-actions">{count < 3 && <button type="button" className="text-button" onClick={() => setCount(count + 1)}>Adicionar empregador</button>}{count > 0 && <button type="button" className="text-button" onClick={() => setCount(count - 1)}>Remover último</button>}</div>
+    </Form></section></>
+
+  return <><Heading eyebrow="MINHA CONTA" title="Seus dados">Informações do cadastro e perfil de acesso.</Heading>{notice && <p className="alert success" role="status">{notice}</p>}<section className="panel form-panel"><dl className="detail-grid">
     <div><dt>Nome</dt><dd>{user.name}</dd></div><div><dt>Usuário</dt><dd>{user.username}</dd></div><div><dt>Perfil</dt><dd>{roles[user.role]}</dd></div>
     {user.role === 'CLIENTE' && <><div><dt>CPF</dt><dd>{user.cpf}</dd></div><div><dt>RG</dt><dd>{user.rg}</dd></div><div><dt>Profissão</dt><dd>{user.profession}</dd></div><div><dt>Endereço</dt><dd>{user.address}</dd></div></>}
-  </dl>{user.role === 'CLIENTE' && <><h3>Empregadores e rendimentos</h3>{user.employers.length ? <ul className="income-list">{user.employers.map((e, i) => <li key={i}><span>{e.name}</span><strong>{money(e.income)}/mês</strong></li>)}</ul> : <p className="muted">Nenhum empregador informado.</p>}</>}</section></>
+  </dl>{user.role === 'CLIENTE' && <><h3>Empregadores e rendimentos</h3>{user.employers.length ? <ul className="income-list">{user.employers.map((e, i) => <li key={i}><span>{e.name}</span><strong>{money(e.income)}/mês</strong></li>)}</ul> : <p className="muted">Nenhum empregador informado.</p>}</>}</section>
+    {user.role === 'CLIENTE' && <section className="panel" style={{ marginTop: 24 }}><div className="inline-actions"><button className="button secondary" onClick={() => { setCount(user.employers.length); setEditing(true); setDeleting(false); setNotice('') }}>Editar cadastro</button><button className="text-button" onClick={() => setDeleting(!deleting)} aria-expanded={deleting}>Excluir minha conta</button></div>
+      {deleting && <div className="confirmation"><h3>Excluir sua conta permanentemente?</h3><p>Somente contas sem pedidos e sem veículos vinculados podem ser excluídas. O histórico de contratos é preservado. Confirme sua senha atual para continuar.</p><Form submit="Confirmar exclusão" secondary={<button type="button" className="button secondary" onClick={() => setDeleting(false)}>Manter minha conta</button>} onSubmit={async data => { await api('/clients/me', { method: 'DELETE', body: { password: data.get('password') } }); onDeleted() }}><Field label="Senha atual" name="password" type="password" autoComplete="current-password" required maxLength={64} /></Form></div>}
+    </section>}</>
 }

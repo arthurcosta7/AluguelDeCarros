@@ -13,9 +13,9 @@ export function Alert({ error }) {
 }
 const fieldNames = { username: 'usuário', password: 'senha', name: 'nome', rg: 'RG', cpf: 'CPF', address: 'endereço', profession: 'profissão', employers: 'empregadores', registration: 'matrícula', year: 'ano', brand: 'marca', model: 'modelo', plate: 'placa', dailyRate: 'diária', ownerId: 'proprietário', startDate: 'retirada', endDate: 'devolução', bankId: 'banco', creditAmount: 'crédito', installments: 'parcelas' }
 export function Resource({ resource, children }) {
-  if (resource.loading) return <p className="loading" role="status">Carregando informações…</p>
+  if (resource.loading) return <div className="loading" role="status"><span className="loading-track" aria-hidden="true" />Carregando informações…</div>
   if (resource.error) return <Alert error={resource.error} />
-  return children(resource.data)
+  return <div className="resource-ready">{children(resource.data)}</div>
 }
 export function Form({ onSubmit, children, submit = 'Salvar', secondary, className = '' }) {
   const [busy, setBusy] = useState(false)
@@ -29,10 +29,10 @@ export function Form({ onSubmit, children, submit = 'Salvar', secondary, classNa
     catch (error) { setError(error); requestAnimationFrame(() => errorRef.current?.focus()) }
     finally { setBusy(false) }
   }
-  return <form onSubmit={handle} className={className}>
+  return <form onSubmit={handle} className={className} aria-busy={busy}>
     <div ref={errorRef} tabIndex={-1}><Alert error={error} /></div>
     <fieldset disabled={busy}>{children}<div className="form-actions">
-      <button className="button primary" type="submit">{busy ? 'Aguarde…' : submit}</button>{secondary}
+      <button className="button primary" type="submit">{busy && <span className="button-spinner" aria-hidden="true" />}{busy ? 'Aguarde…' : submit}</button>{secondary}
     </div></fieldset>
   </form>
 }

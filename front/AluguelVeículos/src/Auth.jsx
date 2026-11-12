@@ -12,7 +12,7 @@ export default function Auth({ onLogin, message }) {
         <ol className="intro-steps"><li><span>01</span> Escolha o veículo e as datas</li><li><span>02</span> Acompanhe a análise do pedido</li><li><span>03</span> Confirme e consulte seu contrato</li></ol>
       </div><small>Sistema acadêmico de aluguel de veículos</small>
     </section>
-    <section className="auth-panel"><div className="auth-form">
+    <section className="auth-panel"><div className="auth-form" key={register ? 'register' : 'login'}>
       <p className="eyebrow">BEM-VINDO À ROTA</p><h2>{register ? 'Crie sua conta' : 'Bom ter você aqui.'}</h2>
       <p className="muted">{register ? 'Cadastre seus dados para solicitar um aluguel.' : 'Entre para acessar seus pedidos e contratos.'}</p>
       {message && <Alert error={message} />}{notice && <p className="alert success" role="status">{notice}</p>}
