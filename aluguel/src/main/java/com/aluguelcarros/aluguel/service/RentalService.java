@@ -23,11 +23,12 @@ public class RentalService {
     private final RentalRepository rentals;
     private final ContractRepository contracts;
     private final EventRepository events;
+    private final CreditContractRepository creditContracts;
     private final PasswordEncoder encoder;
     public RentalService(AccountRepository accounts, VehicleRepository vehicles, RentalRepository rentals,
-                         ContractRepository contracts, EventRepository events, PasswordEncoder encoder) {
+                         ContractRepository contracts, EventRepository events, CreditContractRepository creditContracts, PasswordEncoder encoder) {
         this.accounts=accounts; this.vehicles=vehicles; this.rentals=rentals;
-        this.contracts=contracts; this.events=events; this.encoder=encoder;
+        this.contracts=contracts; this.events=events; this.creditContracts=creditContracts; this.encoder=encoder;
     }
     public Account account(String username) {
         return accounts.findByUsername(username).orElseThrow(() -> fail(HttpStatus.UNAUTHORIZED,"Sessão inválida."));
@@ -44,6 +45,25 @@ public class RentalService {
         a.address=input.address().trim(); a.profession=input.profession().trim();
         a.employers=input.employers().stream().map(e->new Employer(e.name().trim(),e.income())).toList();
         return Views.User.of(accounts.saveAndFlush(a));
+    }
+    @Transactional
+    public Views.User updateProfile(Account actor, Requests.ProfileInput input) {
+        requireRole(actor,Role.CLIENTE);
+        Account a=accounts.findById(actor.id).orElseThrow(()->notFound("Cliente"));
+        if (!Objects.equals(a.cpf,input.cpf()) && accounts.existsByCpf(input.cpf()))
+            throw fail(HttpStatus.CONFLICT,"CPF já cadastrado.");
+        a.name=input.name().trim(); a.rg=input.rg().trim(); a.cpf=input.cpf();
+        a.address=input.address().trim(); a.profession=input.profession().trim();
+        a.employers.clear(); input.employers().forEach(e->a.employers.add(new Employer(e.name().trim(),e.income())));
+        return Views.User.of(accounts.saveAndFlush(a));
+    }
+    @Transactional
+    public void deleteProfile(Account actor, String password) {
+        requireRole(actor,Role.CLIENTE);
+        if (!encoder.matches(password,actor.passwordHash)) throw bad("Senha atual incorreta.");
+        if (rentals.existsByClientId(actor.id) || vehicles.existsByOwnerId(actor.id))
+            throw fail(HttpStatus.CONFLICT,"Sua conta possui pedidos ou veículos vinculados e não pode ser excluída. O histórico deve ser preservado.");
+        accounts.delete(accounts.findById(actor.id).orElseThrow(()->notFound("Cliente"))); accounts.flush();
     }
     public List<Views.Person> banks() { return accounts.findByRole(Role.BANCO).stream().map(Views.Person::of).toList(); }
     public List<Views.Person> owners(Account actor) {
@@ -79,7 +99,8 @@ public class RentalService {
         Rental r=rentals.findById(id).orElseThrow(()->notFound("Pedido"));
         requireRead(actor,r);
         return new Views.Detail(Views.Booking.of(r),events.findByRentalIdOrderByCreatedAtAscIdAsc(id).stream().map(Views.Event::of).toList(),
-            contracts.findByRentalId(id).map(Views.Agreement::of).orElse(null));
+            contracts.findByRentalId(id).map(Views.Agreement::of).orElse(null),
+            creditContracts.findByContractRentalId(id).map(Views.CreditAgreement::of).orElse(null));
     }
     @Transactional
     public Views.Booking create(Account actor,Requests.RentalInput input) {
@@ -140,7 +161,18 @@ public class RentalService {
                 ". Crédito sem juros: R$ "+r.creditAmount+" em "+r.installments+" parcelas. Saldo fora do crédito: R$ "+r.total.subtract(r.creditAmount)+".")+"\n"+
             "Aceito eletronicamente pelo cliente em "+c.acceptedAt+". Registro acadêmico, sem cobrança integrada.";
         r.status=Status.CONTRATADO; rentals.flush();
-        c=contracts.saveAndFlush(c); event(actor,r,"CONTRATO_FORMALIZADO","Condições confirmadas pelo cliente.");
+        c=contracts.saveAndFlush(c);
+        if (r.bank!=null) {
+            CreditContract credit=new CreditContract(); credit.contract=c; credit.bank=r.bank;
+            credit.amount=r.creditAmount; credit.installments=r.installments; credit.acceptedAt=c.acceptedAt;
+            credit.terms="CONTRATO DE CRÉDITO — Aluguel #"+c.id+" / Pedido #"+r.id+"\n"+
+                "Banco concedente: "+r.bank.name+"\nContratante: "+r.client.name+" | CPF: "+r.client.cpf+
+                "\nValor concedido: R$ "+r.creditAmount+" | Parcelas: "+r.installments+
+                " | Juros: zero.\nSaldo fora do crédito: R$ "+r.total.subtract(r.creditAmount)+
+                "\nAceito pelo cliente em "+c.acceptedAt+". Registro acadêmico, sem desembolso integrado.";
+            creditContracts.saveAndFlush(credit);
+        }
+        event(actor,r,"CONTRATO_FORMALIZADO","Condições confirmadas pelo cliente.");
         return Views.Agreement.of(c);
     }
     private void apply(Account actor,Rental r,Requests.RentalInput input) {

@@ -84,3 +84,10 @@ Base: `/api`. Entradas e respostas de negócio em JSON; login usa `application/x
 | POST | `/rentals/{id}/accept?version=N` | Aceitar condições e gerar contrato |
 
 Erros retornam `message` e, quando aplicável, `fields`. Códigos principais: 400 para entrada inválida, 401 para falta de sessão, 403 para operação sem permissão, 404 para registro inexistente e 409 para conflito de dados, disponibilidade ou versão.
+
+
+## Complementação LAB02 — cliente e crédito
+
+O próprio cliente administra seu cadastro: `PUT /api/clients/me` recebe nome, RG, CPF, endereço, profissão e até três empregadores. Usuário, senha e perfil não são alterados nesse endpoint. `DELETE /api/clients/me` exige JSON com `password`, CSRF e senha atual correta. A exclusão é física, encerra sessão e só é permitida sem qualquer pedido (inclusive cancelado) e sem veículo de sua propriedade; vínculos são preservados, retornando 409.
+
+No aceite com crédito aprovado, um `CreditContract` independente é criado na mesma transação do contrato de aluguel, com identificador, banco, valor, parcelas, data e texto aceito. `GET /api/rentals/{id}` inclui `creditContract` (ou null). A permissão é a mesma do pedido. Nenhum documento é gerado antes do aceite; o vínculo único impede duplicidade. A migração V3 preserva o texto dos contratos anteriores com crédito. V4 ativa RLS e retira acesso público da nova tabela; autorização por usuário continua no backend Spring.

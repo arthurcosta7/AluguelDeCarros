@@ -11,9 +11,10 @@ public final class Views {
         public static Person of(Account a) { return a==null ? null : new Person(a.id,a.name,a.role); }
     }
     public record User(Long id, String username, String name, Role role, String rg, String cpf,
-                       String address, String profession, List<Requests.Job> employers) {
-        public static User of(Account a) { return new User(a.id,a.username,a.name,a.role,a.rg,a.cpf,a.address,a.profession,
-            a.employers.stream().map(e->new Requests.Job(e.name,e.income)).toList()); }
+                       String address, String profession, List<Requests.Job> employers, List<Role> presentationRoles) {
+        public static User of(Account a) { return of(a,List.of()); }
+        public static User of(Account a,List<Role> presentationRoles) { return new User(a.id,a.username,a.name,a.role,a.rg,a.cpf,a.address,a.profession,
+            a.employers.stream().map(e->new Requests.Job(e.name,e.income)).toList(),presentationRoles); }
     }
     public record Car(Long id, String registration, int year, String brand, String model, String plate,
                       BigDecimal dailyRate, Person owner, Person company) {
@@ -30,5 +31,8 @@ public final class Views {
     public record Agreement(Long id, Long rentalId, Instant acceptedAt, String terms) {
         public static Agreement of(Contract c) { return new Agreement(c.id,c.rental.id,c.acceptedAt,c.terms); }
     }
-    public record Detail(Booking rental, List<Event> events, Agreement contract) {}
+    public record CreditAgreement(Long id, Long contractId, Person bank, BigDecimal amount, int installments, Instant acceptedAt, String terms) {
+        public static CreditAgreement of(CreditContract c) { return new CreditAgreement(c.id,c.contract.id,Person.of(c.bank),c.amount,c.installments,c.acceptedAt,c.terms); }
+    }
+    public record Detail(Booking rental, List<Event> events, Agreement contract, CreditAgreement creditContract) {}
 }

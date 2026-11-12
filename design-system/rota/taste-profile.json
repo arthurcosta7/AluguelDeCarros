@@ -1,0 +1,71 @@
+{
+  "profile_version": "1.0",
+  "source": {
+    "label": "Interface Rota existente e MASTER.md; análise dos componentes locais",
+    "kind": "design",
+    "ownership": "owned"
+  },
+  "jobs": [
+    "color",
+    "spacing",
+    "brand-behavior",
+    "restraint"
+  ],
+  "observations": [
+    {
+      "dimension": "palette",
+      "evidence": "Sidebar verde escura, superfície branca e destaque lima no CSS existente.",
+      "interpretation": "Preservar contraste e reservar a cor de destaque para navegação.",
+      "confidence": 1
+    },
+    {
+      "dimension": "geometry",
+      "evidence": "Login dividido, navegação lateral e cartões alinhados em grade.",
+      "interpretation": "Refinar acabamento sem substituir a estrutura.",
+      "confidence": 1
+    },
+    {
+      "dimension": "material",
+      "evidence": "Superfícies planas e bordas discretas no MASTER.",
+      "interpretation": "Sombras leves, sem vidro ou brilho.",
+      "confidence": 1
+    }
+  ],
+  "signature": {
+    "restraint": 90,
+    "contrast": 70
+  },
+  "rules": [
+    {
+      "job": "brand-behavior",
+      "rule": "Movimento corporativo: 140/260/420 ms, entrada de 10 px, curva (.2,0,0,1).",
+      "evidence": "Aplicação de gestão e pedido explícito por profissionalismo.",
+      "strength": "high",
+      "transferable": true
+    },
+    {
+      "job": "color",
+      "rule": "Preservar verde, branco e lima; refinar espaçamento e bordas.",
+      "evidence": "MASTER e componentes existentes.",
+      "strength": "high",
+      "transferable": true
+    }
+  ],
+  "anti_rules": [
+    "Não substituir a identidade existente.",
+    "Sem parallax, scroll bloqueado ou animações decorativas contínuas.",
+    "Não atrasar interação para esperar animação.",
+    "Movimento reduzido deve mostrar o estado final."
+  ],
+  "similarity_guard": {
+    "copy_risk": "low",
+    "protected_elements": [
+      "Identidade própria da Rota"
+    ],
+    "must_transform": [
+      "Acabamento dos componentes",
+      "Resposta das interações"
+    ]
+  },
+  "confidence": 1
+}

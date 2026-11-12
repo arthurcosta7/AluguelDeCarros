@@ -32,6 +32,7 @@ class AluguelApplicationTests {
     @Autowired RentalRepository rentals;
     @Autowired EventRepository events;
     @Autowired ContractRepository contracts;
+    @Autowired CreditContractRepository creditContracts;
     @Autowired PasswordEncoder encoder;
     @Autowired RentalService service;
     final JsonMapper json=JsonMapper.builder().build();
@@ -41,7 +42,7 @@ class AluguelApplicationTests {
     final LocalDate end=start.plusDays(3);
 
     @BeforeEach void setup() {
-        contracts.deleteAll(); events.deleteAll(); rentals.deleteAll(); vehicles.deleteAll(); accounts.deleteAll();
+        creditContracts.deleteAll(); contracts.deleteAll(); events.deleteAll(); rentals.deleteAll(); vehicles.deleteAll(); accounts.deleteAll();
         client=account("cliente",Role.CLIENTE); company=account("empresa",Role.EMPRESA);
         bank=account("banco",Role.BANCO); otherCompany=account("outra",Role.EMPRESA);
         car=new Vehicle(); car.registration="001"; car.plate="ABC1D23"; car.brand="Fiat"; car.model="Argo";
@@ -50,7 +51,7 @@ class AluguelApplicationTests {
     }
     Account account(String username,Role role) {
         Account a=new Account(); a.username=username; a.name=username; a.role=role; a.passwordHash=encoder.encode("senha1234");
-        if (role==Role.CLIENTE) { a.cpf="12345678901"; a.rg="12345"; a.address="Rua A"; a.profession="Estudante"; a.employers.add(new Employer("Empresa A",new BigDecimal("3000.00"))); }
+        if (role==Role.CLIENTE) { a.cpf=String.format("%011d",accounts.count()+1); a.rg="12345"; a.address="Rua A"; a.profession="Estudante"; a.employers.add(new Employer("Empresa A",new BigDecimal("3000.00"))); }
         return accounts.saveAndFlush(a);
     }
     Map<String,Object> input() {
@@ -192,5 +193,59 @@ class AluguelApplicationTests {
             assertThat(List.of(first.get(10,TimeUnit.SECONDS),second.get(10,TimeUnit.SECONDS))).containsExactlyInAnyOrder(201,409);
             assertThat(rentals.count()).isEqualTo(1);
         }
+    }
+
+    Map<String,Object> profileInput() {
+        return new HashMap<>(Map.of("name","Cliente atualizado","rg","MG999","cpf","34567890123","address","Rua Nova","profession","Analista","employers",List.of(Map.of("name","Empresa Nova","income",4000))));
+    }
+    @Test void profileUpdateValidatesAndCannotChangeRole() throws Exception {
+        var data=profileInput(); data.put("role","BANCO");
+        mvc.perform(put("/api/clients/me").with(user("cliente")).with(csrf()).contentType("application/json").content(json.writeValueAsString(data)))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Cliente atualizado")).andExpect(jsonPath("$.role").value("CLIENTE"))
+            .andExpect(jsonPath("$.username").value("cliente")).andExpect(jsonPath("$.employers[0].income").value(4000));
+        assertThat(encoder.matches("senha1234",accounts.findById(client.id).orElseThrow().passwordHash)).isTrue();
+        mvc.perform(put("/api/clients/me").with(user("empresa")).with(csrf()).contentType("application/json").content(json.writeValueAsString(data))).andExpect(status().isForbidden());
+        data.put("employers",Collections.nCopies(4,Map.of("name","A","income",1)));
+        mvc.perform(put("/api/clients/me").with(user("cliente")).with(csrf()).contentType("application/json").content(json.writeValueAsString(data))).andExpect(status().isBadRequest());
+        Account second=account("segundo",Role.CLIENTE); data=profileInput(); data.put("cpf",second.cpf);
+        mvc.perform(put("/api/clients/me").with(user("cliente")).with(csrf()).contentType("application/json").content(json.writeValueAsString(data))).andExpect(status().isConflict());
+    }
+    @Test void deleteRequiresPasswordAndInvalidatesSession() throws Exception {
+        mvc.perform(delete("/api/clients/me").with(user("cliente")).contentType("application/json").content(json.writeValueAsString(Map.of("password","senha1234")))).andExpect(status().isForbidden());
+        mvc.perform(delete("/api/clients/me").with(user("cliente")).with(csrf()).contentType("application/json").content(json.writeValueAsString(Map.of("password","errada")))).andExpect(status().isBadRequest());
+        MvcResult login=mvc.perform(post("/api/auth/login").with(csrf()).param("username","cliente").param("password","senha1234")).andExpect(status().isNoContent()).andReturn();
+        MockHttpSession session=(MockHttpSession)login.getRequest().getSession(false);
+        mvc.perform(delete("/api/clients/me").session(session).with(csrf()).contentType("application/json").content(json.writeValueAsString(Map.of("password","senha1234")))).andExpect(status().isNoContent());
+        assertThat(session.isInvalid()).isTrue(); assertThat(accounts.findById(client.id)).isEmpty();
+        mvc.perform(post("/api/auth/login").with(csrf()).param("username","cliente").param("password","senha1234")).andExpect(status().isUnauthorized());
+    }
+    @Test void deletePreservesHistoricalOrdersAndOwners() throws Exception {
+        long id=number(create(input()),"$.id");
+        mvc.perform(post("/api/rentals/"+id+"/cancel?version="+version(id)).with(user("cliente")).with(csrf())).andExpect(status().isOk());
+        mvc.perform(delete("/api/clients/me").with(user("cliente")).with(csrf()).contentType("application/json").content(json.writeValueAsString(Map.of("password","senha1234")))).andExpect(status().isConflict());
+        Account second=account("segundo",Role.CLIENTE); car.owner=second; vehicles.saveAndFlush(car);
+        mvc.perform(delete("/api/clients/me").with(user("segundo")).with(csrf()).contentType("application/json").content(json.writeValueAsString(Map.of("password","senha1234")))).andExpect(status().isConflict());
+        assertThat(rentals.count()).isEqualTo(1);
+    }
+    @Test void unrelatedClientsAndBanksCannotAccessOrMutateOrders() throws Exception {
+        account("segundo",Role.CLIENTE); account("outrobanco",Role.BANCO); long id=number(create(creditInput()),"$.id");
+        for (String username:List.of("segundo","outrobanco")) {
+            mvc.perform(get("/api/rentals/"+id).with(user(username))).andExpect(status().isForbidden());
+            mvc.perform(get("/api/rentals").with(user(username))).andExpect(jsonPath("$.length()").value(0));
+            mvc.perform(put("/api/rentals/"+id+"?version=0").with(user(username)).with(csrf()).contentType("application/json").content(json.writeValueAsString(creditInput()))).andExpect(status().isForbidden());
+            mvc.perform(post("/api/rentals/"+id+"/accept?version=0").with(user(username)).with(csrf())).andExpect(status().isForbidden());
+            mvc.perform(post("/api/rentals/"+id+"/cancel?version=0").with(user(username)).with(csrf())).andExpect(status().isForbidden());
+        }
+    }
+    @Test void creditDocumentIsUniqueAndPreservesConditions() throws Exception {
+        long id=number(create(creditInput()),"$.id"); evaluate(id,version(id),"empresa",true); evaluate(id,version(id),"banco",true);
+        mvc.perform(post("/api/rentals/"+id+"/accept?version="+version(id)).with(user("cliente")).with(csrf())).andExpect(status().isOk());
+        for (String username:List.of("cliente","empresa","banco"))
+            mvc.perform(get("/api/rentals/"+id).with(user(username))).andExpect(status().isOk()).andExpect(jsonPath("$.creditContract.id").exists())
+                .andExpect(jsonPath("$.creditContract.amount").value(200)).andExpect(jsonPath("$.creditContract.installments").value(2));
+        mvc.perform(put("/api/clients/me").with(user("cliente")).with(csrf()).contentType("application/json").content(json.writeValueAsString(profileInput()))).andExpect(status().isOk());
+        assertThat(creditContracts.findAll().getFirst().terms).contains("Contratante: cliente").doesNotContain("Cliente atualizado");
+        mvc.perform(post("/api/rentals/"+id+"/accept?version="+version(id)).with(user("cliente")).with(csrf())).andExpect(status().isConflict());
+        assertThat(creditContracts.count()).isEqualTo(1);
     }
 }

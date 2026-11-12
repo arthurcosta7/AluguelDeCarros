@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+actor "Usuário cadastrado" as U
+actor Cliente as C
+actor "Agente" as A
+actor Empresa as E
+actor Banco as B
+C --|> U
+A --|> U
+E --|> A
+B --|> A
+rectangle Rota {
+ usecase "Cadastrar cliente" as REG
+ usecase "Autenticar / sair" as LOGIN
+ usecase "Consultar frota e disponibilidade" as FROTA
+ usecase "Consultar / editar cadastro próprio" as PERFIL
+ usecase "Excluir conta sem vínculos\n(com confirmação de senha)" as DEL
+ usecase "Criar pedido" as CRIAR
+ usecase "Consultar pedidos e histórico" as VER
+ usecase "Modificar pedido e reenviar" as EDIT
+ usecase "Cancelar pedido próprio" as CANCEL
+ usecase "Avaliar aluguel" as AVAL
+ usecase "Avaliar crédito atribuído" as CRED
+ usecase "Gerir frota própria e proprietário" as GESTAO
+ usecase "Aceitar condições aprovadas" as ACEITE
+ usecase "Formalizar contrato de aluguel" as CONTRATO
+ usecase "Formalizar contrato de crédito" as CC
+ usecase "Consultar / imprimir contratos" as PRINT
+}
+C --> REG
+U --> LOGIN
+U --> FROTA
+U --> VER
+U --> PRINT
+C --> PERFIL
+C --> DEL
+C --> CRIAR
+C --> EDIT
+A --> EDIT
+C --> CANCEL
+E --> AVAL
+E --> GESTAO
+B --> CRED
+C --> ACEITE
+ACEITE ..> CONTRATO : <<include>>
+CC ..> CONTRATO : <<extend>>\n[crédito aprovado]
+note bottom of VER
+Cliente: pedidos próprios.
+Empresa: pedidos da empresa.
+Banco: pedidos atribuídos ao banco.
+end note
+@enduml

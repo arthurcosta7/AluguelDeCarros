@@ -19,6 +19,15 @@ public final class Requests {
         @NotBlank @Size(max=250) String address,
         @NotBlank @Size(max=100) String profession,
         @NotNull @Size(max=3) List<@NotNull @Valid Job> employers) {}
+    public record ProfileInput(
+        @NotBlank @Size(max=120) String name,
+        @NotBlank @Size(max=20) String rg,
+        @NotBlank @Pattern(regexp="[0-9]{11}") String cpf,
+        @NotBlank @Size(max=250) String address,
+        @NotBlank @Size(max=100) String profession,
+        @NotNull @Size(max=3) List<@NotNull @Valid Job> employers) {}
+    public record PresentationRole(@NotNull com.aluguelcarros.aluguel.domain.Model.Role role) {}
+    public record DeleteAccount(@NotBlank @Size(max=64) String password) {}
     public record VehicleInput(
         @NotBlank @Size(max=40) String registration,
         @Min(1900) @Max(2100) int year,

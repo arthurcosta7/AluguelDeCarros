@@ -42,3 +42,15 @@ O `aluguel/run.sh` agora carrega as quatro variáveis do `.env` por um launcher 
 Validados: sintaxe Bash, leitura de senha com caracteres especiais, derivação da URL direta, manutenção do usuário no pooler, lint e build do frontend.
 
 A conexão remota não foi confirmada: o ambiente retornou falha de resolução DNS para o endpoint Supabase. A inicialização pelo Maven também foi impedida pelo sandbox (`mkdir: Read-only file system`). Portanto, a execução de Flyway, a consulta real e o fluxo de cadastro/login contra Supabase permanecem pendentes. O host do Session pooler precisa ser copiado do painel caso a máquina de execução não tenha IPv6.
+
+## Complementação de 11/11/2026
+
+Os registros anteriores são históricos. A execução padrão Maven/Surefire voltou a funcionar nesta sessão. Consulte [COMPLEMENTACAO_LAB02.md](COMPLEMENTACAO_LAB02.md) para as implementações novas, validação de navegador e consultas realizadas no Supabase.
+
+O navegador foi verificado com API real e H2 isolado, sem mocks de rede. O cenário final cobriu edição, crédito, empresa, banco, aceite, dois documentos e exclusão. A conexão/migração Supabase foi verificada separadamente. A suíte atual inclui também teste de migração de contrato antigo.
+
+Resultado final: `./mvnw -B -ntp test` passou com 16 testes, zero falhas/erros (15 de integração de negócio e 1 de migração). `npm run lint`, `npm run build` e os 3 testes frontend passaram. Links locais da documentação e `git diff --check` passaram.
+
+### Alternância da conta de apresentação
+
+18 testes backend aprovados após adicionar dois cenários de seleção de perfil por sessão, preservação da conta/senha e bloqueio para outros usuários e requisições sem CSRF. Lint/build passaram. Seletor conferido no navegador em 1440 e 375 px com respostas simuladas, sem overflow. Inicialização real confirmou `arthur` como CLIENTE e as identidades vinculadas `arthur.empresa`/`arthur.banco` no Supabase; a senha original não foi alterada. Habilitação local por `PRESENTATION_USERNAME`, desabilitada por padrão no código.

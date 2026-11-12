@@ -68,6 +68,16 @@ public final class Model {
         @Column(name="accepted_at", nullable=false) public Instant acceptedAt;
         @Column(nullable=false, columnDefinition="text") public String terms;
     }
+    @Entity(name="CreditContract") @Table(name="credit_contracts")
+    public static class CreditContract {
+        @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;
+        @OneToOne(optional=false) @JoinColumn(name="contract_id", unique=true) public Contract contract;
+        @ManyToOne(optional=false) @JoinColumn(name="bank_id") public Account bank;
+        @Column(nullable=false, precision=12, scale=2) public BigDecimal amount;
+        @Column(nullable=false) public int installments;
+        @Column(name="accepted_at", nullable=false) public Instant acceptedAt;
+        @Column(nullable=false, columnDefinition="text") public String terms;
+    }
     @Entity(name="RentalEvent") @Table(name="rental_events")
     public static class RentalEvent {
         @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;

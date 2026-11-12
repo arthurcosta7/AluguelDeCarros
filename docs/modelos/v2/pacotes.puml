@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+package "Navegador — React + Vite" {
+  [App / Auth / pages / components] as UI
+  [api.js / hooks.js] as HTTP
+  UI --> HTTP
+}
+package "Spring Boot — com.aluguelcarros.aluguel" {
+  package config {
+    [SecurityConfig] as SEC
+    [DemoData] as DEMO
+  }
+  package api {
+    [ApiController] as CTRL
+    [Requests / Views / ApiErrors] as DTO
+  }
+  package service {
+    [RentalService] as SVC
+  }
+  package repository {
+    [Repositórios Spring Data JPA] as REPO
+  }
+  package domain {
+    [Model e entidades] as MODEL
+  }
+  HTTP --> SEC : HTTPS/HTTP + cookie + CSRF
+  SEC --> CTRL
+  CTRL --> DTO
+  CTRL --> SVC
+  SVC --> REPO
+  SVC --> MODEL
+  REPO --> MODEL
+  DEMO --> REPO
+}
+database "Supabase PostgreSQL\nschema locadora" as DB
+REPO --> DB : JDBC/TLS
+note bottom of UI
+View do MVC: interface dinâmica.
+Controllers: API Spring.
+Model: domínio, serviço e persistência.
+end note
+@enduml

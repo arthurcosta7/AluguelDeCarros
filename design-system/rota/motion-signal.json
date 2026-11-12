@@ -1,0 +1,11 @@
+{
+  "taste_state": "ready",
+  "source": "taste-profile.json",
+  "intent": "Confiança e clareza",
+  "personality": "Corporate",
+  "primary": "Entrada curta de páginas e conteúdo",
+  "secondary": "Feedback de botões e formulário",
+  "ambient": "Anéis estáticos com entrada única no login",
+  "reduced_motion": "Sem animações ou deslocamentos de hover",
+  "reference_scope": "Base local; nenhuma referência externa copiada"
+}
