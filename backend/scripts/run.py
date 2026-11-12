@@ -27,7 +27,7 @@ def configuration(directory, environment):
     if not values.get('DB_URL'):
         host = urlparse(values.get('VITE_SUPABASE_URL', '')).hostname or ''
         if not re.fullmatch(r'[a-z0-9]+\.supabase\.co', host):
-            raise ValueError('Configure DB_URL ou uma VITE_SUPABASE_URL válida no aluguel/.env.')
+            raise ValueError('Configure DB_URL ou uma VITE_SUPABASE_URL válida no backend/.env.')
         project = host.split('.')[0]
         values['DB_URL'] = f'jdbc:postgresql://db.{project}.supabase.co:5432/postgres?sslmode=require&connectTimeout=10'
         username = values.get('DB_USERNAME', 'postgres')
@@ -36,7 +36,7 @@ def configuration(directory, environment):
     if not values['DB_URL'].startswith('jdbc:postgresql://'):
         raise ValueError('DB_URL deve usar o formato jdbc:postgresql://host:5432/postgres?sslmode=require.')
     if not values.get('DB_USERNAME') or not values.get('DB_PASSWORD'):
-        raise ValueError('Preencha DB_USERNAME e DB_PASSWORD no aluguel/.env.')
+        raise ValueError('Preencha DB_USERNAME e DB_PASSWORD no backend/.env.')
     return values
 
 

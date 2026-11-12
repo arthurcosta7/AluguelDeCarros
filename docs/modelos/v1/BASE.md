@@ -15,4 +15,4 @@ classDiagram
   Rental "1" -- "0..*" RentalEvent
 ```
 
-Responsabilidades da base: React constrói páginas; SecurityConfig autentica; ApiController recebe HTTP; RentalService aplica regras; repositórios JPA persistem no PostgreSQL. Os atores eram cliente, empresa e banco. Casos existentes: cadastrar cliente, autenticar, consultar/gerir frota, criar/alterar/consultar/cancelar pedido, avaliar aluguel/crédito e aceitar/consultar contrato.
+Responsabilidades da base: React constrói páginas; SecurityConfig autentica; ApiController recebe HTTP; RentalService aplica regras; repositórios JPA persistem no PostgreSQL. Os atores eram cliente, empresa e banco. Casos existentes: cadastrar cliente, autenticar, consultar/gerir frota, criar/alterar/consultar/cancelar pedido, avaliar backend/crédito e aceitar/consultar contrato.

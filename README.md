@@ -49,14 +49,14 @@ Consulte os [diagramas de classes, casos de uso e pacotes](docs/modelos/README.m
 
 Crie/use um projeto Supabase destinado ao protótipo. Copie os dados de conexão **Session pooler** do painel; não confunda a senha do banco com a chave pública/API key. O pooler é útil em redes sem IPv6.
 
-Copie `aluguel/.env.example` para `aluguel/.env` e preencha `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`. Preserve o usuário exato indicado pelo painel. Não coloque credenciais no frontend nem no GitHub. Variáveis já exportadas no terminal prevalecem sobre o `.env`.
+Copie `backend/.env.example` para `backend/.env` e preencha `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`. Preserve o usuário exato indicado pelo painel. Não coloque credenciais no frontend nem no GitHub. Variáveis já exportadas no terminal prevalecem sobre o `.env`.
 
 As migrações Flyway são executadas na inicialização, no schema `locadora`: V1 estrutura inicial; V2 proteção PostgreSQL; V3 contrato de crédito e conversão de contratos antigos com crédito; V4 proteção da nova tabela. Hibernate valida o schema. Não execute scripts manualmente nem apague o histórico Flyway para atualizar uma instalação existente.
 
 ### 2. Backend — terminal 1
 
 ```bash
-cd aluguel
+cd backend
 ./run.sh
 ```
 
@@ -65,7 +65,7 @@ O launcher exige Python 3 e carrega o `.env`, depois executa o Maven. O backend 
 ### 3. Frontend — terminal 2
 
 ```bash
-cd front/AluguelVeículos
+cd frontend
 npm ci
 npm run dev
 ```
@@ -95,12 +95,12 @@ Análise é manual pelos agentes. Não há pagamento, juros, desembolso bancári
 ## Testes e build
 
 ```bash
-cd aluguel
+cd backend
 ./mvnw test
 ```
 
 ```bash
-cd front/AluguelVeículos
+cd frontend
 npm run lint
 npm run build
 node --test --test-isolation=none tests/api.test.js
@@ -111,7 +111,7 @@ Os testes Spring usam H2 em memória e não as credenciais Supabase. Cobrem sess
 ## Estrutura
 
 ```text
-aluguel/
+backend/
   src/main/java/.../api/          Controllers, DTOs, erros
   src/main/java/.../config/       Segurança e dados de demonstração
   src/main/java/.../domain/       Entidades e enumerações
@@ -119,7 +119,7 @@ aluguel/
   src/main/java/.../repository/   Persistência JPA
   src/main/resources/db/          Migrações
   src/test/                      Integração com H2/MockMvc
-front/AluguelVeículos/
+frontend/
   src/                           Páginas, componentes, API e estilos
   tests/                         Testes da camada HTTP
   public/                        Ícones

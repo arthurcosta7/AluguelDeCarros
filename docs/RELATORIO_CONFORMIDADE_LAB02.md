@@ -24,9 +24,9 @@ Legenda: **Atendido no código** significa que a implementação correspondente 
 
 | Requisito do PDF | Situação | Evidência e observação |
 | --- | --- | --- |
-| Java JDK 25 | Atendido | `aluguel/pom.xml` define Java 25; execução de testes com Java 25 nesta sessão. |
-| Spring Boot 4.0.x e Maven | Atendido | Parent Spring Boot 4.0.9, dependências e Maven Wrapper em `aluguel/`. |
-| React + Vite | Atendido | Dependências, scripts e componentes em `front/AluguelVeículos/`. Build executado com sucesso. |
+| Java JDK 25 | Atendido | `backend/pom.xml` define Java 25; execução de testes com Java 25 nesta sessão. |
+| Spring Boot 4.0.x e Maven | Atendido | Parent Spring Boot 4.0.9, dependências e Maven Wrapper em `backend/`. |
+| React + Vite | Atendido | Dependências, scripts e componentes em `frontend/`. Build executado com sucesso. |
 | Supabase/PostgreSQL | Configurado e conexão observada anteriormente nesta sessão | Driver PostgreSQL, URL por variável e migrações Flyway. Na correção anterior do login, o servidor conectou ao pooler Supabase e aplicou V1/V2. Os testes desta auditoria usam H2 e não certificam a operação completa em PostgreSQL. |
 | Cadastro prévio e login obrigatório | Atendido no código e coberto em teste | `SecurityConfig.java` protege operações de negócio; login por usuário/senha, cadastro público de cliente e sessão. |
 | Login de clientes e agentes | Atendido no mecanismo; provisionamento limitado | Papéis CLIENTE, EMPRESA e BANCO usam autenticação comum. Cadastro público cria somente CLIENTE. Agentes precisam de provisionamento; há carga demo opcional em `DemoData.java`. Não há tela de cadastro de agentes. |
@@ -132,12 +132,12 @@ flowchart LR
 
 Principais arquivos para conferir as afirmações:
 
-- [Controladores e endpoints](../aluguel/src/main/java/com/aluguelcarros/aluguel/api/ApiController.java): cadastro, consultas e operações de pedidos/veículos; não há atualização/exclusão de cliente.
-- [Regras de negócio](../aluguel/src/main/java/com/aluguelcarros/aluguel/service/RentalService.java): permissões, datas, disponibilidade, pareceres e contrato.
-- [Modelo persistido](../aluguel/src/main/java/com/aluguelcarros/aluguel/domain/Model.java): Account, Employer, Vehicle, Rental, Contract e RentalEvent.
-- [Validações de entrada](../aluguel/src/main/java/com/aluguelcarros/aluguel/api/Requests.java).
-- [Segurança](../aluguel/src/main/java/com/aluguelcarros/aluguel/config/SecurityConfig.java).
-- [Telas](../front/AluguelVeículos/src/pages.jsx), [cadastro/login](../front/AluguelVeículos/src/Auth.jsx) e [navegação](../front/AluguelVeículos/src/App.jsx).
+- [Controladores e endpoints](../backend/src/main/java/com/aluguelcarros/backend/api/ApiController.java): cadastro, consultas e operações de pedidos/veículos; não há atualização/exclusão de cliente.
+- [Regras de negócio](../backend/src/main/java/com/aluguelcarros/backend/service/RentalService.java): permissões, datas, disponibilidade, pareceres e contrato.
+- [Modelo persistido](../backend/src/main/java/com/aluguelcarros/backend/domain/Model.java): Account, Employer, Vehicle, Rental, Contract e RentalEvent.
+- [Validações de entrada](../backend/src/main/java/com/aluguelcarros/backend/api/Requests.java).
+- [Segurança](../backend/src/main/java/com/aluguelcarros/backend/config/SecurityConfig.java).
+- [Telas](../frontend/src/pages.jsx), [cadastro/login](../frontend/src/Auth.jsx) e [navegação](../frontend/src/App.jsx).
 
 ## 6. Validações e seus limites
 
@@ -145,7 +145,7 @@ Executado novamente em 11/11/2026:
 
 | Comando | Resultado |
 | --- | --- |
-| `cd aluguel && ./mvnw -B -ntp test` | BUILD SUCCESS; 10 testes, 0 falhas, 0 erros, 0 ignorados. |
+| `cd backend && ./mvnw -B -ntp test` | BUILD SUCCESS; 10 testes, 0 falhas, 0 erros, 0 ignorados. |
 | `npm run lint` no frontend | Passou. |
 | `npm run build` no frontend | Passou. |
 | `node --test --test-isolation=none tests/api.test.js` no frontend | 3 testes passaram. |

@@ -8,7 +8,7 @@ Verificação realizada em 04/11/2026, com Java 25 e Node 24.
 | Cenários de integração com contexto Spring, Flyway e H2 | 10 passaram, 0 falharam |
 | Frontend (`npm run lint`) | Passou |
 | Frontend (`npm run build`) | Passou |
-| Sintaxe do script (`bash -n aluguel/run.sh`) | Passou |
+| Sintaxe do script (`bash -n backend/run.sh`) | Passou |
 
 ## Cenários executados
 
@@ -27,7 +27,7 @@ Verificação realizada em 04/11/2026, com Java 25 e Node 24.
 
 O cache Maven disponível estava incompleto para o plugin Surefire 3.5.6, e o ambiente não resolveu o host do Maven Central. Por isso, `mvn test` não concluiu pelo plugin. Os fontes de produção e teste foram compilados pelo Maven e os dez métodos JUnit foram executados por um executor temporário usando `TestContextManager` do Spring, preparação de dados antes de cada teste e MockMvc. Foi usado o mock maker por subclasses do Mockito, evitando a necessidade de anexar um agente à JVM neste ambiente.
 
-Em uma máquina com acesso ao Maven Central, a execução padrão permanece `cd aluguel && ./mvnw test`. Não foram alteradas dependências para contornar a indisponibilidade do plugin.
+Em uma máquina com acesso ao Maven Central, a execução padrão permanece `cd backend && ./mvnw test`. Não foram alteradas dependências para contornar a indisponibilidade do plugin.
 
 ## Verificações externas pendentes
 
@@ -37,7 +37,7 @@ A interface passou por lint e build; não foi executado teste interativo em nave
 
 ## Configuração Supabase — atualização
 
-O `aluguel/run.sh` agora carrega as quatro variáveis do `.env` por um launcher Python, preservando senhas literais e variáveis exportadas. Na ausência de `DB_URL`, deriva a conexão direta com TLS; para Session pooler, aceita a URL JDBC explícita e preserva o usuário com sufixo do projeto.
+O `backend/run.sh` agora carrega as quatro variáveis do `.env` por um launcher Python, preservando senhas literais e variáveis exportadas. Na ausência de `DB_URL`, deriva a conexão direta com TLS; para Session pooler, aceita a URL JDBC explícita e preserva o usuário com sufixo do projeto.
 
 Validados: sintaxe Bash, leitura de senha com caracteres especiais, derivação da URL direta, manutenção do usuário no pooler, lint e build do frontend.
 

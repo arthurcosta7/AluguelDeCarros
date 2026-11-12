@@ -35,3 +35,8 @@ GEMINI.md
 .mcp.json
 mcp.json
 .mcp/
+
+# Ambiente e ferramentas locais preservados no caminho antigo
+/front/
+**/venv/
+**/__pycache__/
